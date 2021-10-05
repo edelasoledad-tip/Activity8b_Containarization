@@ -1,0 +1,39 @@
+---
+# tasks file for dockerELKbuild
+
+- name: Creating docker dir
+  file:
+    path: docker
+    state: directory
+
+- name: Copy contents of docker/ from host into client 
+  copy:
+    src: docker/
+    dest: docker/
+
+- name: Build the image for ELK stack from dockerfile directory
+  docker_image:
+    name: elkstack
+    build:
+      path: docker/elk/
+      pull: no
+    state: present
+    source: build
+
+- name: Clear the IP list for the new services
+  shell: iptables -F; iptables -X
+
+- name: Restart Docker Services 
+  service:
+    name: docker
+    state: restarted
+
+- name: Build ELK image and export into the client
+  docker_container:
+    name: elkstack
+    image: elkstack:latest
+    state: started
+    ports:
+      - 5704:5704
+      - 5302:5302
+      - 5022:5022 

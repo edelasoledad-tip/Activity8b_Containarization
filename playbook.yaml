@@ -1,0 +1,40 @@
+---
+- name: Web and DB server installation using docker image
+  hosts: all
+ 
+  tasks:
+    - name: Docker installation and config | Ubuntu
+      import_role: name=ubuntudockerinstallation
+      when: ansible_facts['distribution'] == 'Ubuntu'
+
+    - name: Docker installation and config | CentOS
+      import_role: name=centosdockerinstallation
+      when: ansible_facts['distribution'] == 'CentOS'
+
+    - name: Add docker group to the current useri
+      group:
+        name: docker
+        state: present
+
+    - name: Adding user into the group docker
+      user: 
+        name: edelasoledad-tip
+        group: docker
+        append: yes
+
+    - name: Disable firewall | Ubuntu
+      service: 
+        name: ufw
+        state: stopped
+        enabled: no
+      when: ansible_facts['distribution'] == 'Ubuntu'
+
+    - name: Disable firewall | CentOs
+      service:
+        name: firewalld
+        state: stopped
+        enabled: no
+      when: ansible_facts['distribution'] == 'CentOS'
+
+    - name: Install and configure ELK stack with Docker image
+      import_role: name=dockerELKbuild
